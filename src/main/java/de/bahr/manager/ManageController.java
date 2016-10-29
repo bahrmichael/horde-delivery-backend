@@ -223,8 +223,16 @@ public class ManageController {
     @RequestMapping(value = "/consolidate", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<?> consolidate(@RequestParam String client, @RequestParam String destination) {
 
+        if (null == client || null == destination) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
         List<Order> orders = orderRepository.findAll().stream()
                 .filter(order -> canBeConsolidated(order, client, destination)).collect(Collectors.toList());
+
+        if (orders.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
 
         LocalDateTime created = null;
         Double price = 0.0;
@@ -247,9 +255,15 @@ public class ManageController {
 
     private boolean canBeConsolidated(Order order, String client, String destination) {
         boolean isRequested = order.getStatus().equals("requested");
+        if (!isRequested) {
+            return false;
+        }
         boolean clientMatches = client.toLowerCase().equals(order.getClient().toLowerCase());
+        if (!clientMatches) {
+            return false;
+        }
         boolean destinationMatches = destination.toLowerCase().equals(order.getDestination().toLowerCase());
-        return isRequested && clientMatches && destinationMatches;
+        return destinationMatches;
     }
 
     private Double calcTotalVolume(List<Order> shippingOrders) throws Exception {
