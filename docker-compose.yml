@@ -1,0 +1,8 @@
+backend:
+  build: .
+  env_file:
+    - mongo-variables.env
+  volumes:
+    - ./key:/home/key
+  ports:
+    - "8444:8444"
