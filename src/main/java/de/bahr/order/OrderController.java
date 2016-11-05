@@ -94,7 +94,7 @@ public class OrderController {
     }
 
     @RequestMapping(value = "/quote", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<?> quote(@RequestParam String link) {
+    public ResponseEntity<?> quote(@RequestParam String link, @RequestParam Integer multiplier) {
 
         // validate url
         Matcher matcher = pattern.matcher(link);
@@ -112,7 +112,7 @@ public class OrderController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<>("{ \"price\": " + price + "}", HttpStatus.OK);
+        return new ResponseEntity<>("{ \"price\": " + ( price * multiplier ) + "}", HttpStatus.OK);
     }
 
     @RequestMapping(value = "/shippingprice", method = RequestMethod.GET, produces = "application/json")
@@ -141,22 +141,26 @@ public class OrderController {
     }
 
     @RequestMapping(value = "/create", method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<?> create(@RequestBody Order order) {
+    public ResponseEntity<?> create(@RequestBody Order order, @RequestParam Integer multiplier) {
 
         // validate url
-        String link = order.getLink();
-        Matcher matcher = pattern.matcher(link);
-        if (!matcher.matches()) {
+        if (!isPraisalValid(order.getLink())) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
         // call url
         List<Item> items;
         try {
-            items = requestItems(link);
+            items = requestItems(order.getLink());
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        if (null != multiplier && multiplier > 1) {
+            for (Item item : items) {
+                item.setQuantity(item.getQuantity() * 2);
+            }
         }
 
         order.setItems(items);
@@ -170,6 +174,11 @@ public class OrderController {
         }
 
         return new ResponseEntity<>(savedOrder, HttpStatus.OK);
+    }
+
+    private boolean isPraisalValid(String link) {
+        Matcher matcher = pattern.matcher(link);
+        return matcher.matches();
     }
 
     private List<Item> requestItems(String link) throws Exception {
