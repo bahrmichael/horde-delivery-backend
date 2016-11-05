@@ -44,8 +44,8 @@ public class PilotController {
     public ResponseEntity<?> listShipping(@RequestHeader("authorization") String auth) {
         User user = getUser(auth);
 
-        List<Order> result = orderRepository.findAll().stream()
-                .filter(order -> order.getStatus().equals("shipping") && order.getAssignee() != null
+        List<Order> result = orderRepository.findShippingOrders().stream()
+                .filter(order -> order.getAssignee() != null
                         && user.getName().equals(order.getAssignee())).collect(Collectors.toList());
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
@@ -72,8 +72,8 @@ public class PilotController {
     public ResponseEntity<?> contractedAll(@RequestHeader("authorization") String authorization) {
         String user = getUser(authorization).getName();
 
-        List<Order> shippingOrders = orderRepository.findAll().stream().filter(order -> orderBelongToUser(user, order)
-                && order.getStatus().equals("shipping")).collect(Collectors.toList());
+        List<Order> shippingOrders = orderRepository.findShippingOrders().stream()
+                .filter(order -> orderBelongToUser(user, order)).collect(Collectors.toList());
 
         for (Order order : shippingOrders) {
             order.setStatus("contracted");

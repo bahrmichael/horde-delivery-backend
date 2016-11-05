@@ -15,7 +15,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.handler.MappedInterceptor;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -119,16 +121,7 @@ public class ManageController {
 
     @RequestMapping(value = "/list", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> list() {
-        List<Order> all = orderRepository.findAll();
-        List<Order> result = new ArrayList<>();
-        all.stream().filter(order -> null != order).forEach(order -> {
-            boolean contracted = "contracted".equals(order.getStatus());
-            boolean rejected = "rejected".equals(order.getStatus());
-            if (!contracted && !rejected) {
-                result.add(order);
-            }
-        });
-
+        List<Order> result = orderRepository.findNonCompletedOrders();
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
@@ -152,7 +145,8 @@ public class ManageController {
 
     private Double sumStatus(String status) {
         final Double[] totalValue = {0.0};
-        orderRepository.findAll().stream().filter(
+
+        orderRepository.findByStatus(status).stream().filter(
                 order -> order.getStatus().equals(status)
         ).forEach(order -> totalValue[0] += order.getExpectedPrice());
         return totalValue[0];
@@ -191,8 +185,7 @@ public class ManageController {
 
     @RequestMapping(value = "/volume/shipping", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> volumeShipping() {
-        List<Order> shippingOrders = orderRepository.findAll().stream().filter(order -> order.getStatus()
-                .equals("shipping")).collect(Collectors.toList());
+        List<Order> shippingOrders = orderRepository.findByStatus("shipping");
 
         try {
             Double totalVolume = calcTotalVolume(shippingOrders);
@@ -207,8 +200,8 @@ public class ManageController {
 
     @RequestMapping(value = "/volume/pending", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> volumeRequested() {
-        List<Order> shippingOrders = orderRepository.findAll().stream().filter(order -> order.getStatus()
-                .equals("requested") || order.getStatus().equals("confirmed")).collect(Collectors.toList());
+
+        List<Order> shippingOrders = orderRepository.findPendingOrders();
 
         try {
             Double totalVolume = calcTotalVolume(shippingOrders);
@@ -227,7 +220,7 @@ public class ManageController {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
-        List<Order> orders = orderRepository.findAll().stream()
+        List<Order> orders = orderRepository.findPendingOrders().stream()
                 .filter(order -> canBeConsolidated(order, client, destination)).collect(Collectors.toList());
 
         if (orders.isEmpty()) {
@@ -287,7 +280,8 @@ public class ManageController {
 
     @RequestMapping(value = "/names", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> pilotNames() {
-        List<User> allUsers = userRepository.findAll();
+        List<User> allUsers = userRepository.findAll().stream()
+                .filter(user -> user.getRole().contains("PILOT")).collect(Collectors.toList());
         return new ResponseEntity<>(allUsers, HttpStatus.OK);
     }
 
