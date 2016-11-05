@@ -68,12 +68,19 @@ public class AuthorizationInterceptor implements HandlerInterceptor {
         String[] split = uri.split("/");
 
         // uri may be things like /error, in that case it is allowed
-        if (split.length < 3) {
-            return "NONE";
+        boolean isSecured = false;
+        for (String uriPart : split) {
+            if (uriPart.toLowerCase().contains("secured")) {
+                isSecured = true;
+            }
         }
 
-        String scope = split[2];
-        return scope.toUpperCase();
+        if (!isSecured) {
+            return "NONE";
+        } else {
+            String scope = split[2];
+            return scope.toUpperCase();
+        }
     }
 
     @Override
