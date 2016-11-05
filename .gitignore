@@ -27,3 +27,4 @@ nbdist/
 keystore.p12
 mongo-variables.env
 key
+codeship.aes

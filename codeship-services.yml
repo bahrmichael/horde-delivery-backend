@@ -1,0 +1,4 @@
+backend:
+  build:
+    image: michaelbahr/horde-delivery-backend
+    dockerfile_path: Dockerfile
