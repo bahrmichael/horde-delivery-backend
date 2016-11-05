@@ -11,6 +11,7 @@ The `:latest` tag may be unstable and or erroneous.
 ### 1.1.2
 
 * OrderController migration
+* Order multiplier
 
 ### 1.1.1
 
