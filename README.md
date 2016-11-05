@@ -8,9 +8,15 @@ This changelog shows changes and features. The version numbers correspond with t
 
 The `:latest` tag may be unstable and or erroneous.
 
-### 1.2 (to be done)
+### 1.1.2
+
+* OrderController migration
+
+### 1.1.1
+
+* Performance upgrades
  
-### 1.1 (to be done)
+### 1.1
 
 * Client SSO with overview of non completed orders
 * Replace HTTP class with Unirest
