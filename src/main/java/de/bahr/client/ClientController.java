@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.OK;
 
 /**
@@ -31,6 +32,24 @@ public class ClientController {
 
     private String decode(String s) {
         return StringUtils.newStringUtf8(Base64.decodeBase64(s));
+    }
+
+    @RequestMapping(value = "/delete", method = RequestMethod.POST, produces = "application/json")
+    public ResponseEntity<?> delete(@RequestHeader("authorization") String auth, @RequestParam String id) {
+        User user = getUser(auth);
+
+        Order order = orderRepository.findOne(id);
+
+        if (!clientEquals(order, user.getName())) {
+            return new ResponseEntity<>(FORBIDDEN);
+        }
+
+        orderRepository.delete(order);
+        return new ResponseEntity<>(OK);
+    }
+
+    private boolean clientEquals(Order order, String clientName) {
+        return order.getClient().toLowerCase().equals(clientName.toLowerCase());
     }
 
     @RequestMapping(value = "/details", method = RequestMethod.GET, produces = "application/json")
@@ -61,7 +80,7 @@ public class ClientController {
     }
 
     private boolean orderBelongsToClient(String user, Order order) {
-        return order.getClient() != null && order.getClient().toLowerCase().equals(user.toLowerCase());
+        return order.getClient() != null && clientEquals(order, user);
     }
 
 }
