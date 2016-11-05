@@ -40,12 +40,12 @@ public class ClientController {
 
         Order order = orderRepository.findOne(id);
 
-        if (!clientEquals(order, user.getName())) {
+        if (order.getStatus().equals("requested") && clientEquals(order, user.getName())) {
+            orderRepository.delete(order);
+            return new ResponseEntity<>(OK);
+        } else {
             return new ResponseEntity<>(FORBIDDEN);
         }
-
-        orderRepository.delete(order);
-        return new ResponseEntity<>(OK);
     }
 
     private boolean clientEquals(Order order, String clientName) {
