@@ -23,4 +23,5 @@ public interface OrderRepository extends MongoRepository<Order, String> {
     @Query("{ 'status': 'shipping'}")
     List<Order> findShippingOrders();
 
+    List<Order> findByAssigneeAndStatus(String assignee, String status);
 }
