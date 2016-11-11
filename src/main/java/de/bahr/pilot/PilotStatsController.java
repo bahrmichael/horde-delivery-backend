@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static de.bahr.order.OrderUtils.calculateProfit;
+import static de.bahr.order.OrderUtils.calculateTotalValue;
+import static de.bahr.order.OrderUtils.calculateTotalVolume;
 import static org.springframework.http.HttpStatus.OK;
 
 /**
@@ -135,17 +138,6 @@ public class PilotStatsController {
         return calculateTotalVolume(orders);
     }
 
-    private Double calculateTotalVolume(List<Order> orders) {
-        Double totalVolume = 0.0;
-        for (Order order : orders) {
-            for (Item item : order.getItems()) {
-                totalVolume += item.getVolume() * item.getQuantity();
-            }
-        }
-
-        return totalVolume;
-    }
-
     private List<Order> findOrdersPast(User user) {
         return findOrders(user, "contracted");
     }
@@ -155,17 +147,6 @@ public class PilotStatsController {
         orders.addAll(findOrders(user, "confirmed"));
         orders.addAll(findOrders(user, "shipping"));
         return orders;
-    }
-
-    private Double calculateProfit(List<Order> orders) {
-        Double total = calculateTotalValue(orders);
-        return total * PILOT_MARGIN;
-    }
-
-    private Double calculateTotalValue(List<Order> orders) {
-        final Double[] total = {0.0};
-        orders.forEach(order -> total[0] += order.getExpectedPrice());
-        return total[0];
     }
 
     private List<Order> findOrders(User user, String status) {
