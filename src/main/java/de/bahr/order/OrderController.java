@@ -157,11 +157,7 @@ public class OrderController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        if (null != multiplier && multiplier > 1) {
-            for (Item item : items) {
-                item.setQuantity(item.getQuantity() * 2);
-            }
-        }
+        multiplyItems(multiplier, items);
 
         order.setItems(items);
         order.setStatus("requested");
@@ -174,6 +170,14 @@ public class OrderController {
         }
 
         return new ResponseEntity<>(savedOrder, HttpStatus.OK);
+    }
+
+    protected void multiplyItems(@RequestParam Integer multiplier, List<Item> items) {
+        if (null != multiplier && multiplier > 1) {
+            for (Item item : items) {
+                item.setQuantity(item.getQuantity() * multiplier);
+            }
+        }
     }
 
     private boolean isPraisalValid(String link) {
