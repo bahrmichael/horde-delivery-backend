@@ -8,6 +8,10 @@ This changelog shows changes and features. The version numbers correspond with t
 
 The `:latest` tag may be unstable and or erroneous.
 
+### 1.1.7
+
+* Self-Service
+
 ### 1.1.2
 
 * OrderController migration
