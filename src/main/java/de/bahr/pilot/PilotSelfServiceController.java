@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Created by michaelbahr on 11/11/16.
@@ -27,10 +29,17 @@ public class PilotSelfServiceController {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    FlagReasonRepository flagReasonRepository;
+
 
     @RequestMapping(value = "/list/requested", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<?> listRequested() {
-        List<Order> result = orderRepository.findByStatus("requested");
+    public ResponseEntity<?> listRequested(@RequestHeader("authorization") String auth) {
+        User user = getUser(auth);
+
+        List<Order> result = orderRepository.findByStatus("requested").stream()
+                .filter(order -> order.getAssignee() == null || order.getAssignee().equals(user.getName()))
+                .collect(Collectors.toList());
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
@@ -39,7 +48,10 @@ public class PilotSelfServiceController {
         User user = getUser(auth);
 
         Order order = orderRepository.findOne(orderId);
-        if (order.getAssignee() != null) {
+
+        if (Objects.equals(order.getAssignee(), user.getName())) {
+            return new ResponseEntity<>(order, HttpStatus.OK);
+        } else if (order.getAssignee() != null) {
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
 
@@ -49,8 +61,8 @@ public class PilotSelfServiceController {
         return new ResponseEntity<>(order, HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/flag", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<?> flagOrder(@RequestHeader("authorization") String auth, String orderId) {
+    @RequestMapping(value = "/flag", method = RequestMethod.POST, produces = "application/json")
+    public ResponseEntity<?> flagOrder(@RequestHeader("authorization") String auth, String orderId, String reason) {
         User user = getUser(auth);
 
         Order order = orderRepository.findOne(orderId);
@@ -58,10 +70,44 @@ public class PilotSelfServiceController {
             return new ResponseEntity<>(HttpStatus.CONFLICT);
         }
 
-        order.setAssignee("Rihan Shazih");
+        order.setAssignee("flagged");
+        orderRepository.save(order);
+
+        FlagReason flagReason = new FlagReason(user.getName(), orderId, reason);
+        flagReasonRepository.save(flagReason);
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/bought", method = RequestMethod.POST, produces = "application/json")
+    public ResponseEntity<?> boughtOrder(@RequestHeader("authorization") String auth, String orderId) {
+        User user = getUser(auth);
+
+        Order order = orderRepository.findOne(orderId);
+        if (!Objects.equals(order.getAssignee(), user.getName())) {
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
+        }
+
+        order.setStatus("shipping");
         orderRepository.save(order);
 
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/skip", method = RequestMethod.POST, produces = "application/json")
+    public ResponseEntity<?> skipOrder(@RequestHeader("authorization") String auth, String orderId) {
+        User user = getUser(auth);
+
+        Order order = orderRepository.findOne(orderId);
+        if (!Objects.equals(order.getAssignee(), user.getName())) {
+            return new ResponseEntity<>(HttpStatus.CONFLICT);
+        }
+
+        order.setStatus("requested");
+        order.setAssignee(null);
+        orderRepository.save(order);
+
+        return new ResponseEntity<>(order, HttpStatus.OK);
     }
 
 
@@ -70,7 +116,6 @@ public class PilotSelfServiceController {
         String characterId = decoded.split(":")[0];
         return userRepository.findByCharacterId(Long.valueOf(characterId));
     }
-
 
     private String decode(String s) {
         return StringUtils.newStringUtf8(Base64.decodeBase64(s));
