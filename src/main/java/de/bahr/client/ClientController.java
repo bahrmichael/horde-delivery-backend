@@ -52,6 +52,16 @@ public class ClientController {
         return order.getClient().toLowerCase().equals(clientName.toLowerCase());
     }
 
+    @RequestMapping(value = "/history", method = RequestMethod.GET, produces = "application/json")
+    public ResponseEntity<?> history(@RequestHeader("authorization") String auth) {
+        User user = getUser(auth);
+
+        List<Order> orders = orderRepository.findAllByClient(user.getName()).stream()
+                .filter(order -> order.getStatus().equals("contracted")).collect(Collectors.toList());
+
+        return new ResponseEntity<>(orders, OK);
+    }
+
     @RequestMapping(value = "/details", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> name(@RequestHeader("authorization") String auth) {
         User user = getUser(auth);

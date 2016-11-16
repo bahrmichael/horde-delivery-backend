@@ -8,6 +8,10 @@ This changelog shows changes and features. The version numbers correspond with t
 
 The `:latest` tag may be unstable and or erroneous.
 
+### 1.1.8
+
+* Client order history
+
 ### 1.1.7
 
 * Self-Service
