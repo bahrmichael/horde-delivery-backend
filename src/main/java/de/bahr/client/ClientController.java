@@ -72,9 +72,8 @@ public class ClientController {
     public ResponseEntity<?> queue(@RequestHeader("authorization") String auth) {
         User user = getUser(auth);
 
-        List<Order> orders = orderRepository.findAll().stream()
-                .filter(order -> notContracted(order) && orderBelongsToClient(user.getName(), order))
-                .collect(Collectors.toList());
+        List<Order> orders = orderRepository.findAllByClient(user.getName()).stream()
+                .filter(order -> notContracted(order)).collect(Collectors.toList());
 
         return new ResponseEntity<>(orders, OK);
     }
