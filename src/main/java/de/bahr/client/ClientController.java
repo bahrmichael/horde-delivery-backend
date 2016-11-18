@@ -57,9 +57,14 @@ public class ClientController {
         User user = getUser(auth);
 
         List<Order> orders = orderRepository.findAllByClient(user.getName()).stream()
-                .filter(order -> order.getStatus().equals("contracted")).collect(Collectors.toList());
+                .filter(order -> order.getStatus().equals("contracted") && isNotConsolidated(order))
+                .collect(Collectors.toList());
 
         return new ResponseEntity<>(orders, OK);
+    }
+
+    private boolean isNotConsolidated(Order order) {
+        return order.getLink() != null &&  !order.getLink().equals("http://evepraisal.com");
     }
 
     @RequestMapping(value = "/details", method = RequestMethod.GET, produces = "application/json")
