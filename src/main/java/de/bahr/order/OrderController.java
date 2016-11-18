@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -75,6 +77,28 @@ public class OrderController {
         }
 
         return result;
+    }
+
+    @RequestMapping(value = "/age", method = RequestMethod.GET, produces = "application/json")
+    public ResponseEntity<?> age(@RequestParam String id) {
+
+
+        // validate url
+        Matcher matcher = idPattern.matcher(id);
+        if (!matcher.matches()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        Order order = orderRepository.findOne(id);
+
+        long age = calcAge(order.getCreated());
+
+        return new ResponseEntity<>("{ \"age\": \"" + age + "\"}", HttpStatus.OK);
+    }
+
+    private long calcAge(LocalDateTime created) {
+        long hours = LocalDateTime.now().until( created, ChronoUnit.HOURS);
+        return hours;
     }
 
     @RequestMapping(value = "/status", method = RequestMethod.GET, produces = "application/json")
