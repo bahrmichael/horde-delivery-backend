@@ -14,7 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.handler.MappedInterceptor;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -122,7 +124,14 @@ public class ManageController {
     @RequestMapping(value = "/list", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> list() {
         List<Order> result = orderRepository.findNonCompletedOrders();
+
+        result.forEach(order -> order.setAge(calcAge(order.getCreated())));
+
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    private long calcAge(LocalDateTime created) {
+        return created.until( LocalDateTime.now(Clock.systemUTC()), ChronoUnit.HOURS);
     }
 
     @RequestMapping(value = "/sum/requested", method = RequestMethod.GET, produces = "application/json")

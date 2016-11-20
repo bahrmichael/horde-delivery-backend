@@ -30,6 +30,7 @@ public class Order {
     private LocalDateTime completed;
     private Double shippingPrice;
     private String assignee;
+    private Long age;
 
     public String getAssignee() {
         return assignee;
@@ -141,5 +142,13 @@ public class Order {
 
     public Double getShippingPrice() {
         return shippingPrice;
+    }
+
+    public Long getAge() {
+        return age;
+    }
+
+    public void setAge(Long age) {
+        this.age = age;
     }
 }

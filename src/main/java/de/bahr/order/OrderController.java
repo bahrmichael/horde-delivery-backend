@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -41,69 +42,8 @@ public class OrderController {
     private Pattern pattern = Pattern.compile(EVEPRAISAL_PATTERN);
     private Pattern idPattern = Pattern.compile(ID);
 
-    @RequestMapping(value = "/lowitems", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<?> lowItems() {
-
-        List<Order> lowOrders = orderRepository.findAll().stream().filter(order -> null != order.getExpectedPrice() && order.getExpectedPrice() < 10000000.0).collect(Collectors.toList());
-
-        Map<String, Long> result = new HashMap<>();
-
-        for (Order order : lowOrders) {
-            List<Item> items = order.getItems();
-            for (Item item : items) {
-                String name = item.getName();
-                Long quantity = item.getQuantity();
-
-                if (result.containsKey(name)) {
-                    result.put(name, result.get(name) + quantity);
-                } else {
-                    result.put(name, quantity);
-                }
-            }
-        }
-
-        result = sortByValue(result);
-
-        return new ResponseEntity<>(result, HttpStatus.OK);
-    }
-
-    private static <K, V> Map<K, V> sortByValue(Map<K, V> map) {
-        List<Map.Entry<K, V>> list = new LinkedList<>(map.entrySet());
-        Collections.sort(list, (o1, o2) -> ((Comparable<V>) o1.getValue()).compareTo(o2.getValue()));
-
-        Map<K, V> result = new LinkedHashMap<>();
-        for (Map.Entry<K, V> entry : list) {
-            result.put(entry.getKey(), entry.getValue());
-        }
-
-        return result;
-    }
-
-    @RequestMapping(value = "/age", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<?> age(@RequestParam String id) {
-
-
-        // validate url
-        Matcher matcher = idPattern.matcher(id);
-        if (!matcher.matches()) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
-
-        Order order = orderRepository.findOne(id);
-
-        long age = calcAge(order.getCreated());
-
-        return new ResponseEntity<>("{ \"age\": \"" + age + "\"}", HttpStatus.OK);
-    }
-
-    private long calcAge(LocalDateTime created) {
-        long hours = LocalDateTime.now().until( created, ChronoUnit.HOURS);
-        return hours;
-    }
-
     @RequestMapping(value = "/status", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> status(@RequestParam String id) {
-
 
         // validate url
         Matcher matcher = idPattern.matcher(id);

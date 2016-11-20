@@ -11,6 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -40,7 +43,14 @@ public class PilotSelfServiceController {
         List<Order> result = orderRepository.findByStatus("requested").stream()
                 .filter(order -> order.getAssignee() == null || order.getAssignee().equals(user.getName()))
                 .collect(Collectors.toList());
+
+        result.forEach(order -> order.setAge(calcAge(order.getCreated())));
+
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    private long calcAge(LocalDateTime created) {
+        return created.until( LocalDateTime.now(Clock.systemUTC()), ChronoUnit.HOURS);
     }
 
     @RequestMapping(value = "/pick", method = RequestMethod.POST, produces = "application/json")
