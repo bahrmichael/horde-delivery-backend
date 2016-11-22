@@ -42,6 +42,23 @@ public class OrderControllerTest {
     }
 
     @Test
+    public void bug_20161122_2() throws Exception {
+        String link = "http://evepraisal.com/e/11856686";
+        List<Item> items = sut.requestItems(link);
+        for (Item item : items) {
+            if (item.getName().equals("Cormorant")) {
+                boolean isCorrectAmount = item.getQuantity() == 1;
+                assertTrue(isCorrectAmount);
+            } else if (item.getName().equals("Caldari Navy Antimatter Charge S")) {
+                boolean isCorrectAmount = item.getQuantity() == 1000;
+                assertTrue(isCorrectAmount);
+            }
+
+            System.out.println(item.getName() + " x" + item.getQuantity());
+        }
+    }
+
+    @Test
     public void testItemConcatenation() {
         List<Item> items = new ArrayList<>();
         items.add(new Item("Tritanium", 3L, 1.0, 1L));

@@ -226,9 +226,9 @@ public class OrderController {
         }
         JSONObject prices = item.getJSONObject("prices");
         JSONObject sell = prices.getJSONObject("sell");
-        Double sellPercentile = sell.getDouble("percentile");
+        Double sellPrice = sell.getDouble("price");
 
-        result.add(new Item(itemName, quantity, volume, sellPercentile.longValue()));
+        result.add(new Item(itemName, quantity, volume, sellPrice.longValue()));
     }
 
     private Long calculateQuote(List<Item> items) {
