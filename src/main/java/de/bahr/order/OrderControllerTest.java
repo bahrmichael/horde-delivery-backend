@@ -29,7 +29,15 @@ public class OrderControllerTest {
         String link = "http://evepraisal.com/e/13749962";
         List<Item> items = sut.requestItems(link);
         for (Item item : items) {
-            System.out.println(item.getName());
+            if (item.getName().equals("Mexallon")) {
+                boolean isCorrectAmount = item.getQuantity() == 8655;
+                assertTrue(isCorrectAmount);
+            } else if (item.getName().equals("Pyerite")) {
+                boolean isCorrectAmount = item.getQuantity() == 14327;
+                assertTrue(isCorrectAmount);
+            }
+
+            System.out.println(item.getName() + " x" + item.getQuantity());
         }
     }
 

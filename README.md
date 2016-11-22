@@ -16,6 +16,10 @@ The `:latest` tag may be unstable and or erroneous.
 
 * evepraisal now gets updated with multiorder
 
+### 1.1.10
+
+* api for alpha joint venture
+
 ### 1.1.9
 
 * Order now has age

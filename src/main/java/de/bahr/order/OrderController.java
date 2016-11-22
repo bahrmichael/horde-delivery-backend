@@ -8,6 +8,8 @@ import com.mashape.unirest.request.body.RequestBodyEntity;
 import de.bahr.DataStore;
 import de.bahr.Http;
 import de.bahr.SlackService;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -197,36 +199,36 @@ public class OrderController {
     }
 
     protected List<Item> requestItems(String link) throws Exception {
-        StringBuffer get = Http.getRequest(link, "GET");
-        String[] rawItems = extractRawItems(get);
-        return parseItems(rawItems);
-    }
-
-    private String[] extractRawItems(StringBuffer get) {
-        String html = get.toString();
-        String body = html.split("<body>")[1];
-        String resultContainer = body.split("<div class=\"span7\" id=\"result_container\">")[1];
-        String tableBody = resultContainer.split("<tbody>")[1].split("</tbody>")[0];
-        return tableBody.split("<tr class=\"line-item-row \">");
-    }
-
-    private Integer calculateSpaiShippingPrice(List<Item> items) {
-        Double totalPrice = 0.0;
-
-        for (Item item : items) {
-            Long price = item.getPrice();
-            Long quantity = item.getQuantity();
-            Double volume = item.getVolume();
-
-            double stackPrice = price * quantity;
-            double shippingCollateralFee = stackPrice * 0.02;
-            double stackVolume = volume * quantity;
-            double shippingVolumeFee = stackVolume * 300;
-
-            totalPrice += stackPrice + shippingCollateralFee + shippingVolumeFee;
+        HttpResponse<JsonNode> jsonResponse = Unirest.get(link + ".json").asJson();
+        if (jsonResponse.getStatus() != 200) {
+            throw new IllegalStateException("The call to " + link + " returned a " + jsonResponse.getStatus() + " response.");
         }
 
-        return totalPrice.intValue();
+        JSONObject body = jsonResponse.getBody().getObject();
+        JSONArray items = body.getJSONArray("items");
+
+        List<Item> result = new ArrayList<>();
+        for (int i = 0; i < items.length(); i++) {
+            parseItem(result, items.get(i));
+        }
+
+        return result;
+    }
+
+    private void parseItem(List<Item> result, Object obj) throws Exception {
+        JSONObject item = (JSONObject) obj;
+
+        String itemName = item.getString("name");
+        Long quantity = item.getLong("quantity");
+        Double volume = item.getDouble("volume");
+        if (null != dataStore) {
+            volume = dataStore.find(itemName).getVolume();
+        }
+        JSONObject prices = item.getJSONObject("prices");
+        JSONObject sell = prices.getJSONObject("sell");
+        Double sellPercentile = sell.getDouble("percentile");
+
+        result.add(new Item(itemName, quantity, volume, sellPercentile.longValue()));
     }
 
     private Long calculateQuote(List<Item> items) {
@@ -244,36 +246,6 @@ public class OrderController {
         }
 
         return totalPrice;
-    }
-
-    private List<Item> parseItems(String[] rawItems) throws Exception {
-        List<Item> result = new ArrayList<>();
-        for (String rawItem : rawItems) {
-            if (!rawItem.replace(" ", "").isEmpty()) {
-                result.add(parseItem(rawItem));
-            }
-        }
-        return result;
-    }
-
-    private Item parseItem(String rawItem) throws Exception {
-
-        String rawQuantity = rawItem.split("<td style=\"text-align:right\">")[1].split("</td>")[0];
-        String itemName = rawItem.split("target=\"_blank\">")[2].split("</a>")[0];
-        itemName = itemName.replace("&#39;", "'");
-
-        String rawItemPrice = rawItem.split("<span class=\"nowrap\">")[1].split("</span>")[0];
-
-        Long price = Double.valueOf(rawItemPrice.replace(",", "")).longValue();
-        Long quantity = Double.valueOf(rawQuantity.replace(",", "")).longValue();
-
-        Double volume = 0.0;
-        if (null != dataStore) {
-            Item item = dataStore.find(itemName);
-            volume = item.getVolume();
-        }
-
-        return new Item(itemName, quantity, volume, price);
     }
 
 }
