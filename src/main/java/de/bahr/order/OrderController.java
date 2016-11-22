@@ -1,9 +1,15 @@
 package de.bahr.order;
 
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.JsonNode;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
+import com.mashape.unirest.request.body.RequestBodyEntity;
 import de.bahr.DataStore;
 import de.bahr.Http;
 import de.bahr.SlackService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +39,9 @@ public class OrderController {
     @Autowired
     SlackService slackService;
 
+    @Value("${ALPHA_CODE}")
+    private String ALPHA_CPDE;
+
     private static final double DELIVERY_FEE = 0.13;
     private static final double PILOT_MARGIN = 0.8;
 
@@ -57,6 +66,17 @@ public class OrderController {
         return new ResponseEntity<>("{ \"status\": \"" + status + "\"}", HttpStatus.OK);
     }
 
+    @RequestMapping(value = "/alpha", method = RequestMethod.POST)
+    public ResponseEntity<?> alphaOrder(@RequestPart("link") String link, @RequestPart("client") String client, @RequestPart("authorization") String auth) {
+
+        if (!auth.equals(ALPHA_CPDE)) {
+            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+        }
+
+        Order order = new Order(client, link, 0.0, "7RM Beanstar");
+        return create(order, 1);
+    }
+
     @RequestMapping(value = "/quote", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> quote(@RequestParam String link, @RequestParam Integer multiplier) {
 
@@ -76,7 +96,7 @@ public class OrderController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        return new ResponseEntity<>("{ \"price\": " + ( price * multiplier ) + "}", HttpStatus.OK);
+        return new ResponseEntity<>("{ \"price\": " + (price * multiplier) + "}", HttpStatus.OK);
     }
 
     @RequestMapping(value = "/shippingprice", method = RequestMethod.GET, produces = "application/json")
@@ -122,9 +142,26 @@ public class OrderController {
         }
 
         multiplyItems(multiplier, items);
-
         order.setItems(items);
         order.setStatus("requested");
+
+        if (multiplier > 1) {
+            try {
+                HttpResponse<String> response = Unirest.post("http://hordedelivery.com:8000")
+                        .header("accept", "application/text").body(concatItems(items)).asString();
+                if (response.getStatus() == 200) {
+                    order.setLink(response.getBody());
+                } else {
+                    System.out.println("Response has status " + response.getStatus());
+                    System.out.println(response.getBody());
+                    return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+            } catch (UnirestException e) {
+                e.printStackTrace();
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        }
+
         Order savedOrder = orderRepository.save(order);
 
         try {
@@ -134,6 +171,16 @@ public class OrderController {
         }
 
         return new ResponseEntity<>(savedOrder, HttpStatus.OK);
+    }
+
+    protected String concatItems(List<Item> items) {
+        String result = "";
+        for (Item item : items) {
+            result += item.getName() + " x" + item.getQuantity() + "\n";
+        }
+        // remove last \n
+        result = result.substring(0, result.length() - 1);
+        return result;
     }
 
     protected void multiplyItems(@RequestParam Integer multiplier, List<Item> items) {
@@ -149,7 +196,7 @@ public class OrderController {
         return matcher.matches();
     }
 
-    private List<Item> requestItems(String link) throws Exception {
+    protected List<Item> requestItems(String link) throws Exception {
         StringBuffer get = Http.getRequest(link, "GET");
         String[] rawItems = extractRawItems(get);
         return parseItems(rawItems);
@@ -220,8 +267,11 @@ public class OrderController {
         Long price = Double.valueOf(rawItemPrice.replace(",", "")).longValue();
         Long quantity = Double.valueOf(rawQuantity.replace(",", "")).longValue();
 
-        Item item = dataStore.find(itemName);
-        Double volume = item.getVolume();
+        Double volume = 0.0;
+        if (null != dataStore) {
+            Item item = dataStore.find(itemName);
+            volume = item.getVolume();
+        }
 
         return new Item(itemName, quantity, volume, price);
     }

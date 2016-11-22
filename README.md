@@ -8,6 +8,14 @@ This changelog shows changes and features. The version numbers correspond with t
 
 The `:latest` tag may be unstable and or erroneous.
 
+### 1.1.12
+
+* fixed a bug with item processing
+
+### 1.1.11
+
+* evepraisal now gets updated with multiorder
+
 ### 1.1.9
 
 * Order now has age
