@@ -4,9 +4,7 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
-import com.mashape.unirest.request.body.RequestBodyEntity;
 import de.bahr.DataStore;
-import de.bahr.Http;
 import de.bahr.SlackService;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -16,13 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Clock;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Created by michaelbahr on 13/04/16.
@@ -42,7 +36,7 @@ public class OrderController {
     SlackService slackService;
 
     @Value("${ALPHA_CODE}")
-    private String ALPHA_CPDE;
+    private String ALPHA_CODE;
 
     private static final double DELIVERY_FEE = 0.13;
     private static final double PILOT_MARGIN = 0.8;
@@ -71,7 +65,7 @@ public class OrderController {
     @RequestMapping(value = "/alpha", method = RequestMethod.POST)
     public ResponseEntity<?> alphaOrder(@RequestPart("link") String link, @RequestPart("client") String client, @RequestPart("authorization") String auth) {
 
-        if (!auth.equals(ALPHA_CPDE)) {
+        if (!auth.equals(ALPHA_CODE)) {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
@@ -91,14 +85,19 @@ public class OrderController {
         Long price;
         // call url
         try {
-            List<Item> items = requestItems(link);
-            price = calculateQuote(items);
+            price = getPrice(link);
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         return new ResponseEntity<>("{ \"price\": " + (price * multiplier) + "}", HttpStatus.OK);
+    }
+
+    protected Long getPrice(@RequestParam String link) throws Exception {
+        Long price;List<Item> items = requestItems(link);
+        price = calculateQuote(items);
+        return price;
     }
 
     @RequestMapping(value = "/shippingprice", method = RequestMethod.GET, produces = "application/json")
@@ -222,7 +221,10 @@ public class OrderController {
         Long quantity = item.getLong("quantity");
         Double volume = item.getDouble("volume");
         if (null != dataStore) {
-            volume = dataStore.find(itemName).getVolume();
+            Item dataStoreItem = dataStore.find(itemName);
+            if (dataStoreItem != null) {
+                volume = dataStoreItem.getVolume();
+            }
         }
         JSONObject prices = item.getJSONObject("prices");
         JSONObject sell = prices.getJSONObject("sell");

@@ -42,6 +42,16 @@ public class OrderControllerTest {
     }
 
     @Test
+    public void bug_20161124() throws Exception {
+        String link = "http://evepraisal.com/e/13800155";
+        List<Item> items = sut.requestItems(link);
+        assertEquals("Bantam", items.get(0).getName());
+
+        Long price = sut.getPrice(link);
+        assertEquals(10313293L, price.longValue());
+    }
+
+    @Test
     public void bug_20161122_2() throws Exception {
         String link = "http://evepraisal.com/e/11856686";
         List<Item> items = sut.requestItems(link);
