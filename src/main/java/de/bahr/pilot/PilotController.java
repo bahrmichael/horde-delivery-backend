@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -77,6 +79,7 @@ public class PilotController {
 
         for (Order order : shippingOrders) {
             order.setStatus("contracted");
+            order.setCompleted(LocalDateTime.now(Clock.systemUTC()));
         }
 
         orderRepository.save(shippingOrders);

@@ -69,7 +69,7 @@ public class ManageController {
         Order order = orderRepository.findOne(id);
         order.setStatus(newStatus);
         if (newStatus.equals("contracted")) {
-            order.setCompleted(LocalDateTime.now());
+            order.setCompleted(LocalDateTime.now(Clock.systemUTC()));
         }
         orderRepository.save(order);
 

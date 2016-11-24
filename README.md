@@ -8,6 +8,10 @@ This changelog shows changes and features. The version numbers correspond with t
 
 The `:latest` tag may be unstable and or erroneous.
 
+### 1.1.13
+
+* fixed a bug where contracted all won't set the completed date
+
 ### 1.1.12
 
 * fixed a bug with item processing
