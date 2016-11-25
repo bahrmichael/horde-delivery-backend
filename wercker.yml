@@ -31,3 +31,12 @@ build:
         name: build
         code: |
           mvn package
+
+deploy:
+  steps:
+    - internal/docker-push:
+        username: $USERNAME
+        password: $PASSWORD
+        tag: latest
+        repository: michaelbahr/horde-delivery-backend
+        registry: https://registry.hub.docker.com
