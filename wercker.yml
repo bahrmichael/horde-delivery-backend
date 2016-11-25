@@ -27,12 +27,11 @@ box: wercker-labs/docker
 
 build:
   steps:
-     script:
-        - install-packages:
-            packages: lxc-docker make
-        - script:
-            name: print the docker version
-            code: docker version
+     - install-packages:
+         packages: lxc-docker make
+     - script:
+         name: print the docker version
+         code: docker version
 
 deploy:
   steps:
