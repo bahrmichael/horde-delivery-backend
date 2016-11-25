@@ -1,5 +1,8 @@
 package de.bahr.manager;
 
+import com.mashape.unirest.http.HttpResponse;
+import com.mashape.unirest.http.Unirest;
+import com.mashape.unirest.http.exceptions.UnirestException;
 import de.bahr.AuthorizationInterceptor;
 import de.bahr.DataStore;
 import de.bahr.order.Item;
@@ -131,7 +134,7 @@ public class ManageController {
     }
 
     private long calcAge(LocalDateTime created) {
-        return created.until( LocalDateTime.now(Clock.systemUTC()), ChronoUnit.HOURS);
+        return created.until(LocalDateTime.now(Clock.systemUTC()), ChronoUnit.HOURS);
     }
 
     @RequestMapping(value = "/sum/requested", method = RequestMethod.GET, produces = "application/json")
@@ -245,7 +248,24 @@ public class ManageController {
             created = order.getCreated();
         }
 
-        Order consolidated = new Order(client, "http://evepraisal.com", price, destination);
+        String link;
+
+        try {
+            HttpResponse<String> response = Unirest.post("http://hordedelivery.com:8000")
+                    .header("accept", "application/text").body(concatItems(items)).asString();
+            if (response.getStatus() == 200) {
+                link = response.getBody();
+            } else {
+                System.out.println("Response has status " + response.getStatus());
+                System.out.println(response.getBody());
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (UnirestException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        Order consolidated = new Order(client, link, price, destination);
         consolidated.setItems(items);
         consolidated.setCreated(created);
         orderRepository.save(consolidated);
@@ -253,6 +273,16 @@ public class ManageController {
         orderRepository.delete(orders);
 
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    protected String concatItems(List<Item> items) {
+        String result = "";
+        for (Item item : items) {
+            result += item.getName() + " x" + item.getQuantity() + "\n";
+        }
+        // remove last \n
+        result = result.substring(0, result.length() - 1);
+        return result;
     }
 
     private boolean canBeConsolidated(Order order, String client, String destination) {
