@@ -8,11 +8,13 @@ public class Reorder {
     private String owner;
     private String destination;
     private String link;
+    private String title;
 
-    public Reorder(String owner, String destination, String link) {
+    public Reorder(String owner, String destination, String link, String title) {
         this.owner = owner;
         this.destination = destination;
         this.link = link;
+        this.title = title;
     }
 
     public String getOwner() {
@@ -37,5 +39,13 @@ public class Reorder {
 
     public void setLink(String link) {
         this.link = link;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
     }
 }
