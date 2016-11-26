@@ -2,6 +2,7 @@ package de.bahr.pilot;
 
 import de.bahr.order.Order;
 import de.bahr.order.OrderRepository;
+import de.bahr.order.OrderUtil;
 import de.bahr.user.User;
 import de.bahr.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Objects;
 
-import static de.bahr.order.OrderUtil.calcAge;
 import static de.bahr.user.UserUtil.getUser;
 
 /**
@@ -40,11 +40,10 @@ public class PilotSelfServiceController {
     public ResponseEntity<?> listRequested(@RequestHeader("authorization") String auth) {
         User user = getUser(auth, userRepository);
 
-        List<Order> result = pilotUtil.filterForPilot(orderRepository.findByStatus("requested"), user.getName());
+        List<Order> order = pilotUtil.filterForPilot(orderRepository.findByStatus("requested"), user.getName());
+        OrderUtil.setAges(order);
 
-        result.forEach(order -> order.setAge(calcAge(order.getCreated())));
-
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return new ResponseEntity<>(order, HttpStatus.OK);
     }
 
     @RequestMapping(value = "/pick", method = RequestMethod.POST, produces = "application/json")

@@ -8,6 +8,8 @@ import de.bahr.DataStore;
 import de.bahr.order.Item;
 import de.bahr.order.Order;
 import de.bahr.order.OrderRepository;
+import de.bahr.order.OrderUtil;
+import de.bahr.stats.StatsController;
 import de.bahr.user.User;
 import de.bahr.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +21,6 @@ import org.springframework.web.servlet.handler.MappedInterceptor;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -43,6 +44,9 @@ public class ManageController {
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    StatsController statsController;
 
     private static final String ID = "[a-z0-9]*";
 
@@ -128,40 +132,24 @@ public class ManageController {
     public ResponseEntity<?> list() {
         List<Order> result = orderRepository.findNonCompletedOrders();
 
-        result.forEach(order -> order.setAge(calcAge(order.getCreated())));
+        OrderUtil.setAges(result);
 
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    private long calcAge(LocalDateTime created) {
-        return created.until(LocalDateTime.now(Clock.systemUTC()), ChronoUnit.HOURS);
-    }
-
     @RequestMapping(value = "/sum/requested", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> sumRequested() {
-        Double value = sumStatus("requested");
-        return new ResponseEntity<>("{ \"sum\" :" + value + " }", HttpStatus.OK);
+        return statsController.sumRequested();
     }
 
     @RequestMapping(value = "/sum/confirmed", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> sumConfirmed() {
-        Double value = sumStatus("confirmed");
-        return new ResponseEntity<>("{ \"sum\" :" + value + " }", HttpStatus.OK);
+        return statsController.sumConfirmed();
     }
 
     @RequestMapping(value = "/sum/shipping", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> sumShipping() {
-        Double value = sumStatus("shipping");
-        return new ResponseEntity<>("{ \"sum\" :" + value + " }", HttpStatus.OK);
-    }
-
-    private Double sumStatus(String status) {
-        final Double[] totalValue = {0.0};
-
-        orderRepository.findByStatus(status).stream().filter(
-                order -> order.getStatus().equals(status)
-        ).forEach(order -> totalValue[0] += order.getExpectedPrice());
-        return totalValue[0];
+        return statsController.sumShipping();
     }
 
     @RequestMapping(value = "/load", method = RequestMethod.GET, produces = "application/json")
@@ -197,32 +185,12 @@ public class ManageController {
 
     @RequestMapping(value = "/volume/shipping", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> volumeShipping() {
-        List<Order> shippingOrders = orderRepository.findByStatus("shipping");
-
-        try {
-            Double totalVolume = calcTotalVolume(shippingOrders);
-            return new ResponseEntity<>("{ \"volumeShipping\" : " + totalVolume.intValue() + " }", HttpStatus.OK);
-        } catch (Exception e) {
-            // todo: catch SocketException when cluster is down
-            e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
+        return statsController.volumeShipping();
     }
 
     @RequestMapping(value = "/volume/pending", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> volumeRequested() {
-
-        List<Order> shippingOrders = orderRepository.findPendingOrders();
-
-        try {
-            Double totalVolume = calcTotalVolume(shippingOrders);
-            return new ResponseEntity<>("{ \"volumePending\" : " + totalVolume.intValue() + " }", HttpStatus.OK);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-
+        return statsController.volumeRequested();
     }
 
     @RequestMapping(value = "/consolidate", method = RequestMethod.POST, produces = "application/json")
@@ -298,23 +266,9 @@ public class ManageController {
         return destinationMatches;
     }
 
-    private Double calcTotalVolume(List<Order> shippingOrders) throws Exception {
-        Double totalVolume = 0.0;
-        for (Order order : shippingOrders) {
-            for (Item item : order.getItems()) {
-                Item dataStoreItem = dataStore.find(item.getName());
-                if (null != dataStoreItem) {
-                    totalVolume += dataStoreItem.getVolume() * item.getQuantity();
-                }
-            }
-        }
-        return totalVolume;
-    }
-
     @RequestMapping(value = "/count/requests", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> countRequests() {
-        Long requested = orderRepository.countByStatus("requested");
-        return new ResponseEntity<>("{\"requestCount\": " + requested + "}", HttpStatus.OK);
+        return statsController.countRequests();
     }
 
     @RequestMapping(value = "/names", method = RequestMethod.GET, produces = "application/json")
