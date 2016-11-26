@@ -4,19 +4,13 @@ import de.bahr.order.Order;
 import de.bahr.order.OrderRepository;
 import de.bahr.user.User;
 import de.bahr.user.UserRepository;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.binary.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Clock;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static de.bahr.order.OrderUtil.calcAge;
 import static de.bahr.user.UserUtil.getUser;
@@ -59,26 +53,23 @@ public class PilotSelfServiceController {
 
         Order order = orderRepository.findOne(orderId);
 
-        if (Objects.equals(order.getAssignee(), user.getName())) {
+        boolean alreadyBelongsToPilot = Objects.equals(order.getAssignee(), user.getName());
+        if (alreadyBelongsToPilot) {
             return new ResponseEntity<>(order, HttpStatus.OK);
         } else if (order.getAssignee() != null) {
             return new ResponseEntity<>(HttpStatus.CONFLICT);
+        } else {
+            order.setAssignee(user.getName());
+            orderRepository.save(order);
+            return new ResponseEntity<>(order, HttpStatus.OK);
         }
-
-        order.setAssignee(user.getName());
-        orderRepository.save(order);
-
-        return new ResponseEntity<>(order, HttpStatus.OK);
     }
 
     @RequestMapping(value = "/flag", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<?> flagOrder(@RequestHeader("authorization") String auth, String orderId, String reason) {
         User user = getUser(auth, userRepository);
-
         Order order = orderRepository.findOne(orderId);
-        if (!order.getAssignee().equals(user.getName())) {
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
-        }
+        if (!pilotUtil.orderBelongsToPilot(user.getName(), order)) return new ResponseEntity<>(HttpStatus.CONFLICT);
 
         order.setAssignee("flagged");
         orderRepository.save(order);
@@ -92,11 +83,8 @@ public class PilotSelfServiceController {
     @RequestMapping(value = "/bought", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<?> boughtOrder(@RequestHeader("authorization") String auth, String orderId) {
         User user = getUser(auth, userRepository);
-
         Order order = orderRepository.findOne(orderId);
-        if (!Objects.equals(order.getAssignee(), user.getName())) {
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
-        }
+        if (!pilotUtil.orderBelongsToPilot(user.getName(), order)) return new ResponseEntity<>(HttpStatus.CONFLICT);
 
         order.setStatus("shipping");
         orderRepository.save(order);
@@ -107,11 +95,8 @@ public class PilotSelfServiceController {
     @RequestMapping(value = "/skip", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<?> skipOrder(@RequestHeader("authorization") String auth, String orderId) {
         User user = getUser(auth, userRepository);
-
         Order order = orderRepository.findOne(orderId);
-        if (!Objects.equals(order.getAssignee(), user.getName())) {
-            return new ResponseEntity<>(HttpStatus.CONFLICT);
-        }
+        if (!pilotUtil.orderBelongsToPilot(user.getName(), order)) return new ResponseEntity<>(HttpStatus.CONFLICT);
 
         order.setStatus("requested");
         order.setAssignee(null);
