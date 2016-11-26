@@ -68,21 +68,20 @@ public class PilotController {
     public ResponseEntity<?> contractedAll(@RequestHeader("authorization") String auth) {
         User user = getUser(auth, userRepository);
 
-        List<Order> shippingOrders = orderRepository.findShippingOrders().stream()
-                .filter(order -> orderBelongToUser(user.getName(), order)).collect(Collectors.toList());
+        List<Order> shippingOrders = filterForPilot(orderRepository.findShippingOrders(), user.getName());
 
-        for (Order order : shippingOrders) {
-            order.setStatus("contracted");
-            order.setCompleted(LocalDateTime.now(Clock.systemUTC()));
-        }
+        updateToContracted(shippingOrders);
 
         orderRepository.save(shippingOrders);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    private boolean orderBelongToUser(String user, Order order) {
-        return order.getAssignee() != null && order.getAssignee().equals(user);
+    protected void updateToContracted(List<Order> shippingOrders) {
+        for (Order order : shippingOrders) {
+            order.setStatus("contracted");
+            order.setCompleted(LocalDateTime.now(Clock.systemUTC()));
+        }
     }
 
 }
