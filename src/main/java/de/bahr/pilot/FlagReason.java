@@ -12,13 +12,12 @@ public class FlagReason {
 
     @Id
     private String id;
-    String pilot;
-    String orderId;
-    String reason;
+    private String pilot;
+    private String orderId;
+    private String reason;
 
     @JsonCreator
     public FlagReason(@JsonProperty String pilot, @JsonProperty String orderId, @JsonProperty String reason) {
-        this.id = id;
         this.pilot = pilot;
         this.orderId = orderId;
         this.reason = reason;
