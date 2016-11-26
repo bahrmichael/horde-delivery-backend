@@ -20,7 +20,7 @@ import java.util.List;
  */
 @CrossOrigin
 @RestController
-@RequestMapping(value = "/secured/manager")
+@RequestMapping(value = "/secured/pilot")
 public class StatsController {
 
     @Autowired
@@ -40,6 +40,12 @@ public class StatsController {
 
     @RequestMapping(value = "/sum/confirmed", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> sumConfirmed() {
+        Double value = sumStatus("confirmed");
+        return new ResponseEntity<>("{ \"sum\" :" + value + " }", HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/sum/confirmed/pilot", method = RequestMethod.GET, produces = "application/json")
+    public ResponseEntity<?> sumConfirmedFor(@RequestHeader("authorization") String auth) {
         Double value = sumStatus("confirmed");
         return new ResponseEntity<>("{ \"sum\" :" + value + " }", HttpStatus.OK);
     }
