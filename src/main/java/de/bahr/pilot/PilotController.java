@@ -39,19 +39,16 @@ public class PilotController {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    PilotUtil pilotUtil;
+
     @RequestMapping(value = "/list/shipping", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> listShipping(@RequestHeader("authorization") String auth) {
         User user = getUser(auth, userRepository);
 
-        List<Order> result = filterForPilot(orderRepository.findShippingOrders(), user.getName());
+        List<Order> result = pilotUtil.filterForPilot(orderRepository.findShippingOrders(), user.getName());
 
         return new ResponseEntity<>(result, HttpStatus.OK);
-    }
-
-    protected List<Order> filterForPilot(List<Order> shippingOrders, String pilotName) {
-        return shippingOrders.stream()
-                .filter(order -> order.getAssignee() != null
-                        && pilotName.equals(order.getAssignee())).collect(Collectors.toList());
     }
 
     @RequestMapping(value = "/details", method = RequestMethod.GET, produces = "application/json")
@@ -68,20 +65,11 @@ public class PilotController {
     public ResponseEntity<?> contractedAll(@RequestHeader("authorization") String auth) {
         User user = getUser(auth, userRepository);
 
-        List<Order> shippingOrders = filterForPilot(orderRepository.findShippingOrders(), user.getName());
-
-        updateToContracted(shippingOrders);
-
+        List<Order> shippingOrders = pilotUtil.filterForPilot(orderRepository.findShippingOrders(), user.getName());
+        pilotUtil.updateToContracted(shippingOrders);
         orderRepository.save(shippingOrders);
 
         return new ResponseEntity<>(HttpStatus.OK);
-    }
-
-    protected void updateToContracted(List<Order> shippingOrders) {
-        for (Order order : shippingOrders) {
-            order.setStatus("contracted");
-            order.setCompleted(LocalDateTime.now(Clock.systemUTC()));
-        }
     }
 
 }

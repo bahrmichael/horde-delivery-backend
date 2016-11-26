@@ -15,7 +15,7 @@ import static org.junit.Assert.*;
  */
 public class PilotControllerTest {
 
-    private PilotController sut = new PilotController();
+    private PilotUtil sut = new PilotUtil();
 
     @Test
     public void filterForPilot() {
@@ -40,7 +40,7 @@ public class PilotControllerTest {
     }
 
     @Test
-    public void updateToContracted() {
+    public void updateToContracted() throws InterruptedException {
         List<Order> list = new ArrayList<>();
         list.add(new Order());
         list.add(new Order());
@@ -48,6 +48,7 @@ public class PilotControllerTest {
         LocalDateTime before = LocalDateTime.now(Clock.systemUTC());
 
         // run
+        Thread.sleep(10L);
         sut.updateToContracted(list);
 
         // verify

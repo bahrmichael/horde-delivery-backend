@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import static de.bahr.order.OrderUtil.calcAge;
+import static de.bahr.user.UserUtil.getUser;
+
 /**
  * Created by michaelbahr on 11/11/16.
  */
@@ -35,27 +38,24 @@ public class PilotSelfServiceController {
     @Autowired
     FlagReasonRepository flagReasonRepository;
 
+    @Autowired
+    PilotUtil pilotUtil;
+
 
     @RequestMapping(value = "/list/requested", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> listRequested(@RequestHeader("authorization") String auth) {
-        User user = getUser(auth);
+        User user = getUser(auth, userRepository);
 
-        List<Order> result = orderRepository.findByStatus("requested").stream()
-                .filter(order -> order.getAssignee() == null || order.getAssignee().equals(user.getName()))
-                .collect(Collectors.toList());
+        List<Order> result = pilotUtil.filterForPilot(orderRepository.findByStatus("requested"), user.getName());
 
         result.forEach(order -> order.setAge(calcAge(order.getCreated())));
 
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    private long calcAge(LocalDateTime created) {
-        return created.until( LocalDateTime.now(Clock.systemUTC()), ChronoUnit.HOURS);
-    }
-
     @RequestMapping(value = "/pick", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<?> pickOrder(@RequestHeader("authorization") String auth, String orderId) {
-        User user = getUser(auth);
+        User user = getUser(auth, userRepository);
 
         Order order = orderRepository.findOne(orderId);
 
@@ -73,7 +73,7 @@ public class PilotSelfServiceController {
 
     @RequestMapping(value = "/flag", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<?> flagOrder(@RequestHeader("authorization") String auth, String orderId, String reason) {
-        User user = getUser(auth);
+        User user = getUser(auth, userRepository);
 
         Order order = orderRepository.findOne(orderId);
         if (!order.getAssignee().equals(user.getName())) {
@@ -91,7 +91,7 @@ public class PilotSelfServiceController {
 
     @RequestMapping(value = "/bought", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<?> boughtOrder(@RequestHeader("authorization") String auth, String orderId) {
-        User user = getUser(auth);
+        User user = getUser(auth, userRepository);
 
         Order order = orderRepository.findOne(orderId);
         if (!Objects.equals(order.getAssignee(), user.getName())) {
@@ -106,7 +106,7 @@ public class PilotSelfServiceController {
 
     @RequestMapping(value = "/skip", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<?> skipOrder(@RequestHeader("authorization") String auth, String orderId) {
-        User user = getUser(auth);
+        User user = getUser(auth, userRepository);
 
         Order order = orderRepository.findOne(orderId);
         if (!Objects.equals(order.getAssignee(), user.getName())) {
@@ -118,17 +118,6 @@ public class PilotSelfServiceController {
         orderRepository.save(order);
 
         return new ResponseEntity<>(order, HttpStatus.OK);
-    }
-
-
-    private User getUser(@RequestHeader("authorization") String auth) {
-        String decoded = decode(auth.replace("Basic ", ""));
-        String characterId = decoded.split(":")[0];
-        return userRepository.findByCharacterId(Long.valueOf(characterId));
-    }
-
-    private String decode(String s) {
-        return StringUtils.newStringUtf8(Base64.decodeBase64(s));
     }
 
 }
