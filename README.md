@@ -8,6 +8,10 @@ This changelog shows changes and features. The version numbers correspond with t
 
 The `:latest` tag may be unstable and or erroneous.
 
+### 1.1.16
+
+* reorder controller for template orders
+
 ### 1.1.14
 
 * fixed a buf where the item parser would fail on items that were not in the items collection
