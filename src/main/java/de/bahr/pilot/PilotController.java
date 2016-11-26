@@ -17,6 +17,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static de.bahr.user.UserUtil.getUser;
+
 /**
  * Created by michaelbahr on 13/04/16.
  */
@@ -37,32 +39,24 @@ public class PilotController {
     @Autowired
     UserRepository userRepository;
 
-
-    private String decode(String s) {
-        return StringUtils.newStringUtf8(Base64.decodeBase64(s));
-    }
-
     @RequestMapping(value = "/list/shipping", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> listShipping(@RequestHeader("authorization") String auth) {
-        User user = getUser(auth);
+        User user = getUser(auth, userRepository);
 
-        List<Order> result = orderRepository.findShippingOrders().stream()
-                .filter(order -> order.getAssignee() != null
-                        && user.getName().equals(order.getAssignee())).collect(Collectors.toList());
+        List<Order> result = filterForPilot(orderRepository.findShippingOrders(), user.getName());
+
         return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    protected List<Order> filterForPilot(List<Order> shippingOrders, String pilotName) {
+        return shippingOrders.stream()
+                .filter(order -> order.getAssignee() != null
+                        && pilotName.equals(order.getAssignee())).collect(Collectors.toList());
     }
 
     @RequestMapping(value = "/details", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> name(@RequestHeader("authorization") String auth) {
-        User user = getUser(auth);
-
-        return new ResponseEntity<>(user, HttpStatus.OK);
-    }
-
-    private User getUser(@RequestHeader("authorization") String auth) {
-        String decoded = decode(auth.replace("Basic ", ""));
-        String characterId = decoded.split(":")[0];
-        return userRepository.findByCharacterId(Long.valueOf(characterId));
+        return new ResponseEntity<>(getUser(auth, userRepository), HttpStatus.OK);
     }
 
     @RequestMapping(value = "/update/status", method = RequestMethod.POST, produces = "application/json")
@@ -71,11 +65,11 @@ public class PilotController {
     }
 
     @RequestMapping(value = "/contracted/all", method = RequestMethod.POST, produces = "application/json")
-    public ResponseEntity<?> contractedAll(@RequestHeader("authorization") String authorization) {
-        String user = getUser(authorization).getName();
+    public ResponseEntity<?> contractedAll(@RequestHeader("authorization") String auth) {
+        User user = getUser(auth, userRepository);
 
         List<Order> shippingOrders = orderRepository.findShippingOrders().stream()
-                .filter(order -> orderBelongToUser(user, order)).collect(Collectors.toList());
+                .filter(order -> orderBelongToUser(user.getName(), order)).collect(Collectors.toList());
 
         for (Order order : shippingOrders) {
             order.setStatus("contracted");
