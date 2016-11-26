@@ -4,15 +4,10 @@ WORKDIR /home/
 
 ADD rootCaCert.cer cert.cer
 RUN echo changeit | keytool -import -alias example -keystore  /opt/java-oracle/jdk1.8.0_11/jre/lib/security/cacerts -file cert.cer -noprompt
-
 RUN mkdir key
 
-RUN mkdir src
-ADD pom.xml .
-
-ADD src src
-RUN mvn package
+COPY target/horde-delivery-backend*.jar horde-delivery.jar
 
 EXPOSE 8444
 
-ENTRYPOINT java -Djava.security.egd=file:/dev/./urandom -jar target/horde-delivery*.jar
+ENTRYPOINT java -Djava.security.egd=file:/dev/./urandom -jar horde-delivery.jar
