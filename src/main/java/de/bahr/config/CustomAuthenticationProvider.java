@@ -52,7 +52,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         }
 
         try {
-            HttpResponse<JsonNode> jsonResponse = Unirest.get("https://hordedelivery.com:8443/session/authenticated")
+            HttpResponse<JsonNode> jsonResponse = Unirest.get("https://auth:8443/session/authenticated")
                     .queryString("sessionId", sessionId)
                     .asJson();
             String s = jsonResponse.getBody().toString();
