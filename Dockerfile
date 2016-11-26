@@ -6,7 +6,7 @@ ADD rootCaCert.cer cert.cer
 RUN echo changeit | keytool -import -alias example -keystore  /opt/java-oracle/jdk1.8.0_11/jre/lib/security/cacerts -file cert.cer -noprompt
 RUN mkdir key
 
-ADD target/horde-delivery-backend*.jar horde-delivery.jar
+COPY target/horde-delivery-backend*.jar horde-delivery.jar
 
 EXPOSE 8444
 
