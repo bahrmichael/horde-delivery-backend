@@ -41,6 +41,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             // use the credentials and authenticate against the third-party system
             return new UsernamePasswordAuthenticationToken(name, password, Collections.emptyList());
         } else {
+            System.out.println("could not authenticate " + name);
             return null;
         }
     }

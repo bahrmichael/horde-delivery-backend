@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static de.bahr.user.UserUtil.getUser;
 
@@ -40,10 +41,13 @@ public class PilotSelfServiceController {
     public ResponseEntity<?> listRequested(@RequestHeader("authorization") String auth) {
         User user = getUser(auth, userRepository);
 
-        List<Order> order = pilotUtil.filterForPilot(orderRepository.findByStatus("requested"), user.getName());
-        OrderUtil.setAges(order);
+        // show orders that don't have an assignee or are assigned to the current pilot
+        List<Order> orders = orderRepository.findByStatus("requested").stream()
+                .filter(order -> order.getAssignee() == null || order.getAssignee().equals(user.getName()))
+                .collect(Collectors.toList());
+        OrderUtil.setAges(orders);
 
-        return new ResponseEntity<>(order, HttpStatus.OK);
+        return new ResponseEntity<>(orders, HttpStatus.OK);
     }
 
     @RequestMapping(value = "/pick", method = RequestMethod.POST, produces = "application/json")

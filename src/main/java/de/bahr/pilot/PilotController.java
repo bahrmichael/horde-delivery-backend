@@ -51,11 +51,6 @@ public class PilotController {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/details", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<?> name(@RequestHeader("authorization") String auth) {
-        return new ResponseEntity<>(getUser(auth, userRepository), HttpStatus.OK);
-    }
-
     @RequestMapping(value = "/update/status", method = RequestMethod.POST, produces = "application/json")
     public ResponseEntity<?> updateStatus(@RequestParam String id, @RequestParam String newStatus) {
         return manageController.updateStatus(id, newStatus);

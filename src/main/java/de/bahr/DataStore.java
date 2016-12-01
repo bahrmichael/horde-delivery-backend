@@ -93,7 +93,6 @@ public class DataStore {
             return null;
         }
 
-        // todo: when repackaged volume is available through crest, use that
         Long typeId = itemData.getLong("id");
 
         List<Volumes> volumes = repository.findAll().stream().filter(item -> item.getTypeid().equals(typeId)).collect(Collectors.toList());
