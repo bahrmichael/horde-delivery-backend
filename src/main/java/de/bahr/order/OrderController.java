@@ -95,9 +95,10 @@ public class OrderController {
     }
 
     protected Long getPrice(@RequestParam String link) throws Exception {
-        Long price;List<Item> items = requestItems(link);
-        price = calculateQuote(items);
-        return price;
+        List<Item> items = requestItems(link);
+        String updatedLink = updateLink(items);
+        List<Item> updatedItems = requestItems(updatedLink);
+        return calculateQuote(updatedItems);
     }
 
     @RequestMapping(value = "/shippingprice", method = RequestMethod.GET, produces = "application/json")
@@ -146,21 +147,11 @@ public class OrderController {
         order.setItems(items);
         order.setStatus("requested");
 
-        if (multiplier > 1) {
-            try {
-                HttpResponse<String> response = Unirest.post("http://evepraisal:8000")
-                        .header("accept", "application/text").body(concatItems(items)).asString();
-                if (response.getStatus() == 200) {
-                    order.setLink(response.getBody());
-                } else {
-                    System.out.println("Response has status " + response.getStatus());
-                    System.out.println(response.getBody());
-                    return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-                }
-            } catch (UnirestException e) {
-                e.printStackTrace();
-                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-            }
+        try {
+            order.setLink(updateLink(items));
+        } catch (UnirestException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         Order savedOrder = orderRepository.save(order);
@@ -172,6 +163,16 @@ public class OrderController {
         }
 
         return new ResponseEntity<>(savedOrder, HttpStatus.OK);
+    }
+
+    private String updateLink(List<Item> items) throws UnirestException, IllegalStateException {
+        HttpResponse<String> response = Unirest.post("http://evepraisal:8000")
+                .header("accept", "application/text").body(concatItems(items)).asString();
+        if (response.getStatus() == 200) {
+            return response.getBody();
+        } else {
+            throw new IllegalStateException("Response has status " + response.getStatus());
+        }
     }
 
     protected String concatItems(List<Item> items) {
