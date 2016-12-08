@@ -78,7 +78,7 @@ public class ClientController {
         User user = getUser(auth);
 
         List<Order> orders = orderRepository.findAllByClientIgnoreCase(user.getName()).stream()
-                .filter(order -> notContracted(order)).collect(Collectors.toList());
+                .filter(this::notContracted).collect(Collectors.toList());
 
         return new ResponseEntity<>(orders, OK);
     }
