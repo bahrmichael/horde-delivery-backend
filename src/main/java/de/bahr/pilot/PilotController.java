@@ -1,6 +1,8 @@
 package de.bahr.pilot;
 
+import de.bahr.DataStore;
 import de.bahr.manager.ManageController;
+import de.bahr.order.Item;
 import de.bahr.order.Order;
 import de.bahr.order.OrderRepository;
 import de.bahr.user.User;
@@ -42,6 +44,9 @@ public class PilotController {
     @Autowired
     PilotUtil pilotUtil;
 
+    @Autowired
+    DataStore dataStore;
+
     @RequestMapping(value = "/list/shipping", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> listShipping(@RequestHeader("authorization") String auth) {
         User user = getUser(auth, userRepository);
@@ -65,6 +70,44 @@ public class PilotController {
         orderRepository.save(shippingOrders);
 
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/cargo", method = RequestMethod.GET, produces = "application/json")
+    public ResponseEntity<?> sumConfirmedFor(@RequestHeader("authorization") String auth) {
+        User user = getUser(auth, userRepository);
+
+        List<Order> ordersPending = getOrders("requested", user.getName());
+        List<Order> ordersShipping = getOrders("shipping", user.getName());
+
+        Double cargoPending;
+        Double cargoShipping;
+        try {
+            cargoPending = calcTotalVolume(ordersPending);
+            cargoShipping = calcTotalVolume(ordersShipping);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        return new ResponseEntity<>("{ \"cargoPending\" :" + cargoPending
+                + ", \"cargoShipping\" :" + cargoShipping + "}", HttpStatus.OK);
+    }
+
+    private List<Order> getOrders(String status, String pilot) {
+        return orderRepository.findByStatusAndAssignee(status, pilot);
+    }
+
+    private Double calcTotalVolume(List<Order> orders) throws Exception {
+        Double totalVolume = 0.0;
+        for (Order order : orders) {
+            for (Item item : order.getItems()) {
+                Item dataStoreItem = dataStore.find(item.getName());
+                if (null != dataStoreItem) {
+                    totalVolume += dataStoreItem.getVolume() * item.getQuantity();
+                }
+            }
+        }
+        return totalVolume;
     }
 
 }

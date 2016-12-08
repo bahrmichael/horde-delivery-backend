@@ -14,6 +14,8 @@ public interface OrderRepository extends MongoRepository<Order, String> {
 
     List<Order> findByStatus(String status);
 
+    List<Order> findByStatusAndAssignee(String status, String assignee);
+
     @Query("{ $or: [{ 'status': 'requested'}, { 'status': 'confirmed'}, { 'status': 'shipping'}]}")
     List<Order> findNonCompletedOrders();
 
