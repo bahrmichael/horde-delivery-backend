@@ -56,7 +56,7 @@ public class ClientController {
     public ResponseEntity<?> history(@RequestHeader("authorization") String auth) {
         User user = getUser(auth);
 
-        List<Order> orders = orderRepository.findAllByClient(user.getName()).stream()
+        List<Order> orders = orderRepository.findAllByClientIgnoreCase(user.getName()).stream()
                 .filter(order -> order.getStatus().equals("contracted") && isNotConsolidated(order))
                 .collect(Collectors.toList());
 
@@ -77,7 +77,7 @@ public class ClientController {
     public ResponseEntity<?> queue(@RequestHeader("authorization") String auth) {
         User user = getUser(auth);
 
-        List<Order> orders = orderRepository.findAllByClient(user.getName()).stream()
+        List<Order> orders = orderRepository.findAllByClientIgnoreCase(user.getName()).stream()
                 .filter(order -> notContracted(order)).collect(Collectors.toList());
 
         return new ResponseEntity<>(orders, OK);
@@ -91,10 +91,6 @@ public class ClientController {
         String decoded = decode(auth.replace("Basic ", ""));
         String characterId = decoded.split(":")[0];
         return userRepository.findByCharacterId(Long.valueOf(characterId));
-    }
-
-    private boolean orderBelongsToClient(String user, Order order) {
-        return order.getClient() != null && clientEquals(order, user);
     }
 
 }
