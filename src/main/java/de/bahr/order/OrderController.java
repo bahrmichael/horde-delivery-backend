@@ -38,6 +38,7 @@ public class OrderController {
     @Value("${ALPHA_CODE}")
     private String ALPHA_CODE;
 
+    private static final double PREFIT_MARGIN = 0.02;
     private static final double DELIVERY_FEE = 0.13;
     private static final double PILOT_MARGIN = 0.8;
 
@@ -74,7 +75,7 @@ public class OrderController {
     }
 
     @RequestMapping(value = "/quote", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<?> quote(@RequestParam String link, @RequestParam Integer multiplier) {
+    public ResponseEntity<?> quote(@RequestParam String link, @RequestParam Integer multiplier, @RequestParam Boolean prefit) {
 
         // validate url
         Matcher matcher = pattern.matcher(link);
@@ -86,6 +87,10 @@ public class OrderController {
         // call url
         try {
             price = getPrice(link);
+            if (prefit) {
+                long prefitPrice = (long) (price * ( 1+ PREFIT_MARGIN));
+                price += prefitPrice;
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
