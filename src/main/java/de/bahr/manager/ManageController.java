@@ -233,7 +233,7 @@ public class ManageController {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        Order consolidated = new Order(client, link, price, destination);
+        Order consolidated = new Order(client, link, price, destination, "nofit");
         consolidated.setItems(items);
         consolidated.setCreated(created);
         orderRepository.save(consolidated);
@@ -260,6 +260,9 @@ public class ManageController {
         }
         boolean clientMatches = client.toLowerCase().equals(order.getClient().toLowerCase());
         if (!clientMatches) {
+            return false;
+        }
+        if (!order.getPrefit().equals("nofit")) {
             return false;
         }
         boolean destinationMatches = destination.toLowerCase().equals(order.getDestination().toLowerCase());

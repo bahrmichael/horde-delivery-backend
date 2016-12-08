@@ -69,7 +69,7 @@ public class OrderController {
             return new ResponseEntity<>(HttpStatus.FORBIDDEN);
         }
 
-        Order order = new Order(client, link, 0.0, "7RM Beanstar");
+        Order order = new Order(client, link, 0.0, "7RM Beanstar", "nofit");
         return create(order, 1);
     }
 

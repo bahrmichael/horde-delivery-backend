@@ -31,6 +31,7 @@ public class Order {
     private Double shippingPrice;
     private String assignee;
     private Long age;
+    private String prefit;
 
     public String getAssignee() {
         return assignee;
@@ -59,11 +60,12 @@ public class Order {
     @JsonCreator
     public Order(@JsonProperty("client") String client, @JsonProperty("link") String link,
                  @JsonProperty("expectedPrice") Double expectedPrice,
-                 @JsonProperty("destination") String destination) {
+                 @JsonProperty("destination") String destination, @JsonProperty("prefit") String prefit) {
         this.client = client;
         this.link = link;
         this.expectedPrice = expectedPrice;
         this.destination = destination;
+        this.prefit = prefit;
         this.status = "requested";
         this.items = new ArrayList<>();
         this.created = LocalDateTime.now(Clock.systemUTC());
@@ -150,5 +152,14 @@ public class Order {
 
     public void setAge(Long age) {
         this.age = age;
+    }
+
+
+    public String getPrefit() {
+        return prefit;
+    }
+
+    public void setPrefit(String prefit) {
+        this.prefit = prefit;
     }
 }
