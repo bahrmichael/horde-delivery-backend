@@ -44,13 +44,6 @@ public class StatsController {
         return new ResponseEntity<>("{ \"sum\" :" + value + " }", HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/sum/confirmed/pilot", method = RequestMethod.GET, produces = "application/json")
-    public ResponseEntity<?> sumConfirmedFor(@RequestHeader("authorization") String auth) {
-        // todo: needs filtering for pilot
-        Double value = sumStatus("confirmed");
-        return new ResponseEntity<>("{ \"sum\" :" + value + " }", HttpStatus.NOT_IMPLEMENTED);
-    }
-
     @RequestMapping(value = "/sum/shipping", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> sumShipping() {
         Double value = sumStatus("shipping");
