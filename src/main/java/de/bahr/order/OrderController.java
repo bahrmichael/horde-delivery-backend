@@ -4,6 +4,7 @@ import com.mashape.unirest.http.HttpResponse;
 import com.mashape.unirest.http.JsonNode;
 import com.mashape.unirest.http.Unirest;
 import com.mashape.unirest.http.exceptions.UnirestException;
+import de.bahr.CapModules;
 import de.bahr.DataStore;
 import de.bahr.SlackService;
 import org.json.JSONArray;
@@ -39,6 +40,7 @@ public class OrderController {
     private String ALPHA_CODE;
 
     private static final double DELIVERY_FEE = 0.13;
+    private static final double CAP_MODULE_FEE = 0.10;
     private static final double PILOT_MARGIN = 0.8;
 
     private static final String EVEPRAISAL_PATTERN = "http[s]?://(www\\.)?evepraisal\\.com/e/[0-9]*";
@@ -234,10 +236,15 @@ public class OrderController {
             Long price = Long.valueOf(item.getPrice());
             Long quantity = Long.valueOf(item.getQuantity());
 
-            totalPrice += price * quantity;
+            Double feeMultiplier;
+            if (CapModules.isCapModule(item.getName())) {
+                feeMultiplier = 1 + CAP_MODULE_FEE;
+            } else {
+                feeMultiplier = 1 + DELIVERY_FEE;
+            }
+            totalPrice += (long)(price * feeMultiplier) * quantity;
         }
 
         return totalPrice;
     }
-
 }
