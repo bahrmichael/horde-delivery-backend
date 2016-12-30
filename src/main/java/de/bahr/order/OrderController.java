@@ -226,7 +226,7 @@ public class OrderController {
     }
 
     private Long calculateQuote(List<Item> items) {
-        return (long) (calculateStackPrice(items) * (1 + DELIVERY_FEE));
+        return calculateStackPrice(items);
     }
 
     private Long calculateStackPrice(List<Item> items) {
