@@ -220,6 +220,7 @@ public class CapModules {
             "Starbase Capital Shipyard\n" +
             "Capital Auxiliary Nano Pump I\n" +
             "Capital Nanobot Accelerator II\n" +
+            "ECM Jammer Burst Projector\n" +
             "Capital Remote Hull Repairer I\n" +
             "Triage Module I\n" +
             "Triage Module I Blueprint\n" +
@@ -442,6 +443,8 @@ public class CapModules {
             "Scarab II\n" +
             "Siren II\n" +
             "Dromi II\n" +
+            "Stasis Webification Burst Projector\n" +
+            "Energy Neutralization Burst Projector\n" +
             "Capital Energy Neutralizer I\n" +
             "Capital Gremlin Compact Energy Neutralizer\n" +
             "Capital Infectious Scoped Energy Neutralizer\n" +
@@ -454,6 +457,11 @@ public class CapModules {
             "Capital Energy Nosferatu II\n" +
             "True Sansha Capital Energy Nosferatu\n" +
             "Dark Blood Capital Energy Nosferatu\n" +
+            "Warp Disruption Burst Projector\n" +
+            "Sensor Dampening Burst Projector\n" +
+            "Target Illumination Burst Projector\n" +
+            "Weapon Disruption Burst Projector\n" +
+            "Superweapon_AOEGuide\n" +
             "Capital Emergency Hull Energizer I\n" +
             "Capital Implacable Compact Emergency Hull Energizer\n" +
             "Capital Indefatigable Enduring Emergency Hull Energizer\n" +
@@ -543,6 +551,19 @@ public class CapModules {
             "Gallium Ample Quad 3500mm Siege Artillery Blueprint\n" +
             "Scout Scoped Quad 3500mm Siege Artillery Blueprint\n" +
             "Prototype Precise Quad 3500mm Siege Artillery Blueprint\n" +
+            "10000MN Afterburner I\n" +
+            "10000MN Y-S8 Compact Afterburner\n" +
+            "10000MN Monopropellant Enduring Afterburner\n" +
+            "10000MN Afterburner II\n" +
+            "Domination 10000MN Afterburner\n" +
+            "Shadow Serpentis 10000MN Afterburner\n" +
+            "50000MN Microwarpdrive I\n" +
+            "50000MN Y-T8 Compact Microwarpdrive\n" +
+            "50000MN Quad LiF Restrained Microwarpdrive\n" +
+            "50000MN Cold-Gas Enduring Microwarpdrive\n" +
+            "50000MN Microwarpdrive II\n" +
+            "Domination 50000MN Microwarpdrive\n" +
+            "Shadow Serpentis 50000MN Microwarpdrive\n" +
             "Hail XL\n" +
             "Barrage XL\n" +
             "Tremor XL\n" +
@@ -555,6 +576,8 @@ public class CapModules {
             "Conflagration XL\n" +
             "Gleam XL\n" +
             "Aurora XL\n" +
+            "Superweapon_AOEECM\n" +
+            "Networked Sensor Array\n" +
             "Hermes Compact Fighter Support Unit\n" +
             "Fighter Support Unit II\n" +
             "Sentient Fighter Support Unit\n" +
