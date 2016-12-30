@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -47,7 +48,10 @@ public class PilotSelfServiceController {
                 .filter(order -> order.getAssignee() == null || order.getAssignee().equals(user.getName()))
                 .collect(Collectors.toList());
         OrderUtil.setAges(orders);
+
+        // sort from oldest to youngest
         orders.sort(Comparator.comparing(Order::getAge));
+        Collections.reverse(orders);
 
         return new ResponseEntity<>(orders, HttpStatus.OK);
     }
