@@ -62,17 +62,6 @@ public class OrderController {
         return new ResponseEntity<>("{ \"status\": \"" + status + "\"}", HttpStatus.OK);
     }
 
-    @RequestMapping(value = "/alpha", method = RequestMethod.POST)
-    public ResponseEntity<?> alphaOrder(@RequestPart("link") String link, @RequestPart("client") String client, @RequestPart("authorization") String auth) {
-
-        if (!auth.equals(ALPHA_CODE)) {
-            return new ResponseEntity<>(HttpStatus.FORBIDDEN);
-        }
-
-        Order order = new Order(client, link, 0.0, "7RM Beanstar");
-        return create(order, 1);
-    }
-
     @RequestMapping(value = "/quote", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> quote(@RequestParam String link, @RequestParam Integer multiplier) {
 
