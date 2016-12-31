@@ -24,7 +24,7 @@ public class SurveyController {
     @Autowired
     SurveyQuestionRepository questionRepository;
 
-    @RequestMapping(value = "", method = RequestMethod.GET, produces = "text/plain")
+    @RequestMapping(value = "", method = RequestMethod.GET, produces = "application/json")
     public ResponseEntity<?> getQuestion(@RequestParam String uuid) {
 
         List<SurveyAnswer> answers = answerRepository.findByUuid(uuid);
@@ -32,7 +32,7 @@ public class SurveyController {
             long days = answer.getDate().until( LocalDateTime.now(), ChronoUnit.DAYS);
             if (days < 3) {
                 // empty response means no question to answer
-                return new ResponseEntity<>(" ", HttpStatus.NO_CONTENT);
+                return new ResponseEntity<>("{}", HttpStatus.NO_CONTENT);
             }
         }
 
@@ -41,7 +41,7 @@ public class SurveyController {
         int randomNum = ThreadLocalRandom.current().nextInt(0, allQuestions.size());
         SurveyQuestion question = allQuestions.get(randomNum);
 
-        return new ResponseEntity<>(question.getQuestion(), HttpStatus.OK);
+        return new ResponseEntity<>("{ \"question\": \"" + question.getQuestion() + "\"}", HttpStatus.OK);
     }
 
     @RequestMapping(value = "", method = RequestMethod.POST, produces = "application/json")
