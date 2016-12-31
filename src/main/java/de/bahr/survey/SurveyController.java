@@ -32,7 +32,7 @@ public class SurveyController {
             long days = answer.getDate().until( LocalDateTime.now(), ChronoUnit.DAYS);
             if (days < 3) {
                 // empty response means no question to answer
-                return new ResponseEntity<>("{}", HttpStatus.NO_CONTENT);
+                return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
         }
 
