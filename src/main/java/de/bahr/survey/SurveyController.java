@@ -5,6 +5,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -23,7 +25,16 @@ public class SurveyController {
     SurveyQuestionRepository questionRepository;
 
     @RequestMapping(value = "", method = RequestMethod.GET, produces = "text/plain")
-    public ResponseEntity<?> getQuestion() {
+    public ResponseEntity<?> getQuestion(@RequestParam String uuid) {
+
+        List<SurveyAnswer> answers = answerRepository.findByUuid(uuid);
+        for (SurveyAnswer answer : answers) {
+            long days = answer.getDate().until( LocalDateTime.now(), ChronoUnit.DAYS);
+            if (days < 3) {
+                // empty response means no question to answer
+                return new ResponseEntity<>(" ", HttpStatus.NO_CONTENT);
+            }
+        }
 
         List<SurveyQuestion> allQuestions = questionRepository.findAll();
 

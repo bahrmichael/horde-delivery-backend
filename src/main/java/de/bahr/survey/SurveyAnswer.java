@@ -3,6 +3,8 @@ package de.bahr.survey;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.time.LocalDateTime;
+
 /**
  * Created by michaelbahr on 31/12/2016.
  */
@@ -10,6 +12,7 @@ public class SurveyAnswer {
     private String question;
     private String answer;
     private String uuid;
+    private LocalDateTime date;
 
     @JsonCreator
     public SurveyAnswer(@JsonProperty("question") String question, @JsonProperty("answer") String answer,
@@ -17,6 +20,7 @@ public class SurveyAnswer {
         this.question = question;
         this.answer = answer;
         this.uuid = uuid;
+        this.date = LocalDateTime.now();
     }
 
     public String getQuestion() {
@@ -41,5 +45,13 @@ public class SurveyAnswer {
 
     public void setUuid(String uuid) {
         this.uuid = uuid;
+    }
+
+    public LocalDateTime getDate() {
+        return date;
+    }
+
+    public void setDate(LocalDateTime date) {
+        this.date = date;
     }
 }
