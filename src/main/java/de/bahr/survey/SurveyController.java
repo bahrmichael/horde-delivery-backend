@@ -37,6 +37,9 @@ public class SurveyController {
         }
 
         List<SurveyQuestion> allQuestions = questionRepository.findAll();
+        if (allQuestions.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
 
         int randomNum = ThreadLocalRandom.current().nextInt(0, allQuestions.size());
         SurveyQuestion question = allQuestions.get(randomNum);
