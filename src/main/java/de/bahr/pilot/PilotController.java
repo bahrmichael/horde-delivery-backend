@@ -104,6 +104,8 @@ public class PilotController {
                 Item dataStoreItem = dataStore.find(item.getName());
                 if (null != dataStoreItem) {
                     totalVolume += dataStoreItem.getVolume() * item.getQuantity();
+                } else {
+                    totalVolume += item.getVolume() + item.getQuantity();
                 }
             }
         }
